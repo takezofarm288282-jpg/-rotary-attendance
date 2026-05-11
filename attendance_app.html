@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【日程調整】第1回合同委員会 - 出雲南ロータリークラブ</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  /* ===== リセット・ベース ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8f8f6;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.12);
+    --border-mid: rgba(0,0,0,0.2);
+    --text: #1a1a18;
+    --text-secondary: #666660;
+    --text-tertiary: #aaa;
+    --green-bg: #eaf3de; --green-text: #27500a; --green-dark: #1c4a0e;
+    --red-bg: #fcebeb;   --red-text: #791f1f;
+    --yellow-bg: #faeeda; --yellow-text: #633806;
+    --radius: 10px; --radius-sm: 6px;
+  }
+  body { font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+  .container { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  /* ===== 案内文 ===== */
+  .letter { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; line-height: 1.9; }
+  .letter-subject { font-size: 15px; font-weight: 600; margin-bottom: 1rem; padding-bottom: .75rem; border-bottom: 0.5px solid var(--border); }
+  .letter p { margin-bottom: .75rem; }
+  .letter-block { background: var(--bg); border-left: 3px solid var(--border-mid); padding: .75rem 1rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: .75rem 0; }
+  .letter-block p { margin-bottom: .2rem; }
+  .deadline { display: inline-block; background: var(--red-bg); color: var(--red-text); font-weight: 600; padding: 2px 10px; border-radius: var(--radius-sm); }
+  .letter-closing { margin-top: 1rem; font-size: 13px; color: var(--text-secondary); }
+
+  /* ===== 区切り ===== */
+  .divider { display: flex; align-items: center; gap: 12px; margin: 1.5rem 0 1.25rem; }
+  .divider span { font-size: 13px; color: var(--text-secondary); white-space: nowrap; font-weight: 500; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
+
+  /* ===== アプリヘッダー ===== */
+  .app-header { border-left: 3px solid var(--text); padding-left: 12px; margin-bottom: 1.25rem; }
+  .app-header h1 { font-size: 14px; font-weight: 600; line-height: 1.6; }
+  .meta-row { display: flex; gap: 14px; margin-top: 5px; flex-wrap: wrap; }
+  .meta-item { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
+
+  /* ===== GAS設定バナー ===== */
+  .gas-banner { background: #fff8e1; border: 1px solid #f0c040; border-radius: var(--radius-sm); padding: .75rem 1rem; margin-bottom: 1.25rem; font-size: 13px; }
+
+  /* ===== テスト・リセットバナー ===== */
+  .test-banner { background: #f3f0ff; border: 1px solid #b0a0ee; border-radius: var(--radius-sm); padding: .75rem 1rem; margin-bottom: 1.25rem; font-size: 13px; color: #3c3489; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .test-banner-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-reset { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; border: 1px solid #7f77dd; background: #fff; color: #3c3489; font-weight: 600; }
+  .btn-reset:hover { background: #eeedfe; }
+  .btn-reset-danger { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; border: 1px solid #d9534f; background: #fff; color: #791f1f; font-weight: 600; }
+  .btn-reset-danger:hover { background: #fcebeb; }
+  .gas-banner input { margin-top: 8px; width: 100%; padding: 6px 10px; border: 0.5px solid var(--border-mid); border-radius: var(--radius-sm); font-size: 13px; }
+  .gas-banner button { margin-top: 8px; padding: 6px 14px; background: var(--green-dark); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; }
+
+  /* ===== タブ ===== */
+  .tab-bar { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 1.25rem; }
+  .tab { padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--text-secondary); border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; }
+  .tab.active { color: var(--text); border-bottom: 2px solid var(--text); font-weight: 600; }
+
+  /* ===== セクション ===== */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ===== カード ===== */
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+
+  /* ===== バッジ ===== */
+  .badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: var(--radius-sm); white-space: nowrap; }
+  .badge-s { background: #eeedfe; color: #3c3489; }
+  .badge-k { background: #e1f5ee; color: #085041; }
+  .badge-y { background: #faeeda; color: #633806; }
+  .badge-r { background: #faece7; color: #712b13; }
+  .badge-i { background: #fbeaf0; color: #72243e; }
+  .group-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin: 1rem 0 6px; display: flex; align-items: center; gap: 6px; }
+
+  /* ===== セレクト ===== */
+  select { width: 100%; font-size: 14px; padding: 8px 10px; border: 0.5px solid var(--border-mid); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+
+  /* ===== テーブル ===== */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 6px 8px; color: var(--text-secondary); font-weight: 600; border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  td { padding: 7px 8px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+
+  /* ===== 出欠ボタン ===== */
+  .att-btn {
+    padding: 5px 11px; font-size: 12px; cursor: pointer;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-mid);
+    background: var(--surface); color: var(--text-secondary);
+    white-space: nowrap;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .att-btn[data-sel="yes"]   { background: var(--green-bg);  color: var(--green-text);  border-color: transparent; font-weight: 600; }
+  .att-btn[data-sel="no"]    { background: var(--red-bg);    color: var(--red-text);    border-color: transparent; font-weight: 600; }
+  .att-btn[data-sel="maybe"] { background: var(--yellow-bg); color: var(--yellow-text); border-color: transparent; font-weight: 600; }
+
+  /* ===== 凡例 ===== */
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; margin-bottom: 1rem; }
+  .leg { padding: 2px 9px; border-radius: var(--radius-sm); font-weight: 600; }
+
+  /* ===== 保存ボタン ===== */
+  .btn-save { width: 100%; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); border: none; background: var(--green-dark); color: #fff; margin-top: .5rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-save:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ===== PDFボタン ===== */
+  .btn-pdf { padding: 8px 16px; font-size: 13px; cursor: pointer; border-radius: var(--radius-sm); border: 0.5px solid var(--border-mid); background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
+
+  /* ===== ステータス ===== */
+  .status-msg { font-size: 13px; padding: 8px 12px; border-radius: var(--radius-sm); margin-top: 8px; }
+  .status-ok      { background: var(--green-bg);  color: var(--green-text); }
+  .status-err     { background: var(--red-bg);    color: var(--red-text); }
+  .status-loading { background: var(--bg); color: var(--text-secondary); }
+
+  /* ===== 集計メトリクス ===== */
+  .metric { background: var(--bg); border-radius: var(--radius-sm); padding: .75rem 1rem; text-align: center; }
+  .metric-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+  .metric-val { font-size: 22px; font-weight: 700; }
+  .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1rem; }
+
+  /* ===== レスポンシブ ===== */
+  @media(max-width:500px){
+    .att-btn { padding: 5px 7px; font-size: 11px; }
+    .tab { padding: 8px 10px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ===== 案内文 ===== -->
+<div class="letter">
+  <div class="letter-subject">【日程調整】2026-2027年度　第1回合同委員会開催のお知らせ</div>
+  <div style="margin-bottom:1rem;">出雲南ロータリークラブ 2026-2027年度<br>正副委員長ならびに委員の皆様</div>
+  <p>拝啓</p>
+  <p>新緑の候、皆様におかれましては益々ご清祥のこととお慶び申し上げます。日頃よりクラブ活動への多大なるご理解とご協力を賜り、厚く御礼申し上げます。</p>
+  <p>さて、いよいよ2026-2027年度の新体制がスタートいたします。つきましては、新年度の円滑な運営に向け、以下の5委員会合同による「第1回委員会」を開催いたしたく存じます。</p>
+  <p>本委員会には、<strong>水谷厚志会長</strong>にもご出席いただく予定です。</p>
+  <div class="letter-block">
+    <p style="font-weight:600;margin-bottom:.4rem;">【対象委員会】</p>
+    <p>・環境保全委員会　・米山奨学会委員会　・インターアクト委員会</p>
+    <p>・ロータリー財団委員会　・奉仕プロジェクト委員会</p>
+  </div>
+  <div class="letter-block">
+    <p style="font-weight:600;margin-bottom:.4rem;">【開催時期および日程調整について】</p>
+    <p>5月および6月の中での開催を予定しております。お忙しい中恐縮ですが、下欄の日程調整アプリより、ご都合の良い日時のご回答をお願い申し上げます。</p>
+    <p style="margin-top:.5rem;">回答期限：<span class="deadline">5月15日（金）まで</span></p>
+  </div>
+  <p>皆様と新年度の抱負を共有し、実りある活動の第一歩を踏み出せることを楽しみにしております。何卒よろしくお願い申し上げます。</p>
+  <p>敬具</p>
+  <div class="letter-closing">
+    <p>出雲南ロータリークラブ 2026-2027年度</p>
+    <p>インターアクト委員長予定者　竹田和彦（グループとりまとめ担当）</p>
+    <p>📞 090-5375-7695</p>
+  </div>
+</div>
+
+
+<!-- ===== 回答手順ガイド ===== -->
+<div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem;">
+  <p style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1rem;">📋 回答の手順</p>
+  <div style="display:flex;flex-direction:column;gap:0;">
+
+    <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:1rem;">
+      <div style="width:28px;height:28px;border-radius:50%;background:#1c4a0e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</div>
+      <div style="flex:1;padding-top:4px;">
+        <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">「出欠回答」タブを開く</p>
+        <p style="font-size:12px;color:var(--text-secondary);line-height:1.7;">下のアプリの「出欠回答」タブをタップしてください。</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:1rem;border-top:0.5px solid var(--border);padding-top:1rem;">
+      <div style="width:28px;height:28px;border-radius:50%;background:#1c4a0e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</div>
+      <div style="flex:1;padding-top:4px;">
+        <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">お名前を選ぶ</p>
+        <p style="font-size:12px;color:var(--text-secondary);line-height:1.7;">プルダウンから自分のお名前を選んでください。</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:1rem;border-top:0.5px solid var(--border);padding-top:1rem;">
+      <div style="width:28px;height:28px;border-radius:50%;background:#1c4a0e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
+      <div style="flex:1;padding-top:4px;">
+        <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">各日程に出欠を入力する</p>
+        <p style="font-size:12px;color:var(--text-secondary);line-height:1.7;">日付ごとに以下のボタンを押してください。押すと色が変わります。</p>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          <span style="background:#eaf3de;color:#27500a;padding:3px 12px;border-radius:5px;font-size:12px;font-weight:700;">○ 出席可能</span>
+          <span style="background:#fcebeb;color:#791f1f;padding:3px 12px;border-radius:5px;font-size:12px;font-weight:700;">× 出席不可能</span>
+          <span style="background:#faeeda;color:#633806;padding:3px 12px;border-radius:5px;font-size:12px;font-weight:700;">△ 要調整</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">※ もう一度押すと選択が解除されます。</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:14px;align-items:flex-start;border-top:0.5px solid var(--border);padding-top:1rem;">
+      <div style="width:28px;height:28px;border-radius:50%;background:#1c4a0e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">4</div>
+      <div style="flex:1;padding-top:4px;">
+        <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">「回答を保存」ボタンを押す</p>
+        <p style="font-size:12px;color:var(--text-secondary);line-height:1.7;">全日程の入力が終わったら、画面下の緑のボタンを押して完了です。<br>送信後、回答内容の確認画面とPDFダウンロードボタンが表示されます。</p>
+        <div style="margin-top:8px;background:#1c4a0e;color:#eaf3de;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block;">
+          ✓ 回答を保存する
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 区切り ===== -->
+<div class="divider"><span>↓ 日程調整アプリ</span></div>
+
+<!-- GAS設定バナー非表示 -->
+
+<!-- ===== アプリヘッダー ===== -->
+<div class="app-header">
+  <h1>出雲南ロータリークラブ 2026-2027年度　第1回委員会開催日程調整</h1>
+  <div class="meta-row">
+    <span class="meta-item"><i class="ti ti-clock"></i> 開催時間：19:00〜</span>
+    <span class="meta-item"><i class="ti ti-map-pin"></i> 開催場所：未定</span>
+    <span class="meta-item"><i class="ti ti-calendar"></i> 調査期間：5/21〜6/30</span>
+  </div>
+</div>
+
+<!-- ===== タブ ===== -->
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('member',this)">メンバー</button>
+  <button class="tab" onclick="switchTab('answer',this)">出欠回答</button>
+  <button class="tab" onclick="switchTab('summary',this)">集計</button>
+</div>
+
+<!-- ===== メンバー ===== -->
+<div id="tab-member" class="section active">
+  <div id="member-list"></div>
+</div>
+
+<!-- ===== 出欠回答 ===== -->
+<div id="tab-answer" class="section">
+  <div class="card">
+    <label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:8px;">回答者を選択</label>
+    <select id="answer-member-sel" onchange="renderAnswerDates()">
+      <option value="">名前を選んでください</option>
+    </select>
+  </div>
+  <div class="legend">
+    <span class="leg" style="background:var(--green-bg);color:var(--green-text);">○ 出席可能</span>
+    <span class="leg" style="background:var(--red-bg);color:var(--red-text);">× 出席不可能</span>
+    <span class="leg" style="background:var(--yellow-bg);color:var(--yellow-text);">△ 要調整</span>
+  </div>
+  <div id="answer-dates"></div>
+  <div id="save-area" style="display:none;">
+    <div id="status-msg"></div>
+    <button class="btn-save" id="btn-save" onclick="saveToSheet()">
+      <i class="ti ti-check"></i> 回答を保存する
+    </button>
+  </div>
+</div>
+
+<!-- ===== 集計 ===== -->
+<div id="tab-summary" class="section">
+  <div id="summary-content"></div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ===== データ定義 =====
+const DOWS = ["日","月","火","水","木","金","土"];
+const EXCLUDE = new Set([
+  "2026-05-22","2026-05-23","2026-05-26","2026-05-30",
+  "2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05",
+  "2026-06-08","2026-06-09","2026-06-14","2026-06-17",
+  "2026-06-19","2026-06-20","2026-06-29"
+]);
+const MEMBERS = [
+  {id:'m0', name:'高橋信治',  role:'委員長',   group:'奉仕プロジェクト'},
+  {id:'m1', name:'小川敬',    role:'副委員長', group:'奉仕プロジェクト'},
+  {id:'m2', name:'山本英',    role:'委員長',   group:'環境保全'},
+  {id:'m3', name:'伊藤和之',  role:'副委員長', group:'環境保全'},
+  {id:'m4', name:'永田実',    role:'委員',     group:'環境保全'},
+  {id:'m5', name:'福田康平',  role:'委員',     group:'環境保全'},
+  {id:'m6', name:'板垣浩',    role:'委員',     group:'環境保全'},
+  {id:'m7', name:'金山利行',  role:'委員長',   group:'米山記念奨学会'},
+  {id:'m8', name:'竹内一夫',  role:'副委員長', group:'米山記念奨学会'},
+  {id:'m9', name:'吾郷紘一',  role:'委員',     group:'米山記念奨学会'},
+  {id:'m10',name:'錦織正二',  role:'委員',     group:'米山記念奨学会'},
+  {id:'m11',name:'福代新治',  role:'委員長',   group:'ロータリー財団'},
+  {id:'m12',name:'土伊豆勝磨',role:'副委員長', group:'ロータリー財団'},
+  {id:'m13',name:'原田明成',  role:'委員',     group:'ロータリー財団'},
+  {id:'m14',name:'松村英俊',  role:'副委員長', group:'インターアクト'},
+  {id:'m15',name:'樋野圭衣子',role:'委員',     group:'インターアクト'},
+  {id:'m16',name:'佐藤大樹',  role:'委員',     group:'インターアクト'},
+];
+const GROUP_BADGE = {
+  '奉仕プロジェクト':'badge-s','環境保全':'badge-k',
+  '米山記念奨学会':'badge-y','ロータリー財団':'badge-r','インターアクト':'badge-i'
+};
+
+// ===== GAS URL（固定・非表示） =====
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzbrYNVmhZJJ092jeHwLg1GiY1497p90NrFXc5QKDSmYC3TM7HZ79DQwPiTVS0SJtW9gg/exec';
+
+// ===== 状態（localStorageから復元） =====
+let answers = {};
+try {
+  const saved = localStorage.getItem('rotary_answers_2026');
+  if (saved) answers = JSON.parse(saved);
+} catch(e) {}
+MEMBERS.forEach(m => { if (!answers[m.id]) answers[m.id] = {}; });
+
+function generateDates() {
+  const dates = [];
+  let d = new Date("2026-05-21");
+  const end = new Date("2026-06-30");
+  while (d <= end) {
+    const key = d.toISOString().slice(0,10);
+    if (!EXCLUDE.has(key)) {
+      dates.push({ key, label:`${d.getMonth()+1}/${d.getDate()}`, dow:DOWS[d.getDay()], dayOfWeek:d.getDay() });
+    }
+    d = new Date(d.getTime() + 86400000);
+  }
+  return dates;
+}
+const DATES = generateDates();
+
+// ===== ラベル変換 =====
+function labelOf(v) { return v==='yes'?'○': v==='no'?'×': v==='maybe'?'△': ''; }
+function fullLabelOf(v) { return v==='yes'?'○ 出席可能': v==='no'?'× 出席不可能': v==='maybe'?'△ 要調整': '（未回答）'; }
+
+// ===== タブ切替 =====
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'answer') { syncMemberSel(); renderAnswerDates(); }
+  if (name === 'summary') renderSummary();
+}
+
+// ===== メンバー一覧 =====
+function renderMembers() {
+  const groups = {};
+  MEMBERS.forEach(m => { if (!groups[m.group]) groups[m.group]=[]; groups[m.group].push(m); });
+  let html = '';
+  Object.keys(groups).forEach(g => {
+    html += `<div class="group-title"><span class="badge ${GROUP_BADGE[g]}">${g}</span></div>
+             <div class="card" style="padding:.75rem 1.25rem;">`;
+    groups[g].forEach(m => {
+      const has = Object.values(answers[m.id]||{}).some(v=>v);
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${has ? '<i class="ti ti-check" style="font-size:13px;color:var(--green-text);"></i>' : '<span style="width:13px;display:inline-block;"></span>'}
+          <span style="font-size:14px;${has?'color:var(--green-text);font-weight:600;':''}">${m.name}</span>
+        </div>
+        <span style="font-size:11px;color:var(--text-secondary);">${m.role}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('member-list').innerHTML = html;
+}
+
+// ===== セレクト同期 =====
+function syncMemberSel() {
+  const sel = document.getElementById('answer-member-sel');
+  const cur = sel.value;
+  const groups = {};
+  MEMBERS.forEach(m => { if (!groups[m.group]) groups[m.group]=[]; groups[m.group].push(m); });
+  let html = '<option value="">名前を選んでください</option>';
+  Object.keys(groups).forEach(g => {
+    html += `<optgroup label="${g}">`;
+    groups[g].forEach(m => {
+      const done = Object.values(answers[m.id]||{}).some(v=>v);
+      html += `<option value="${m.id}">${m.name}（${m.role}）${done?' ✓':''}`;
+    });
+    html += `</optgroup>`;
+  });
+  sel.innerHTML = html;
+  if (MEMBERS.find(m=>m.id===cur)) sel.value = cur;
+}
+
+// ===== 回答画面 =====
+function renderAnswerDates() {
+  const mid = document.getElementById('answer-member-sel').value;
+  const el = document.getElementById('answer-dates');
+  const saveArea = document.getElementById('save-area');
+  if (!mid) { el.innerHTML=''; saveArea.style.display='none'; return; }
+  const member = MEMBERS.find(m=>m.id===mid);
+  if (!answers[mid]) answers[mid] = {};
+  const att = answers[mid];
+  const byMonth = {};
+  DATES.forEach(d => { const mo=d.key.slice(0,7); if(!byMonth[mo])byMonth[mo]=[]; byMonth[mo].push(d); });
+
+  let html = `<div class="card" style="padding:.75rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:10px;">
+    <span class="badge ${GROUP_BADGE[member.group]}">${member.group}</span>
+    <span style="font-size:14px;font-weight:600;">${member.name}</span>
+    <span style="font-size:11px;color:var(--text-secondary);">${member.role}</span>
+  </div>`;
+
+  Object.keys(byMonth).sort().forEach(mo => {
+    const mNum = parseInt(mo.split('-')[1]);
+    html += `<p style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">${mNum}月</p>`;
+    html += `<div style="overflow-x:auto;margin-bottom:1.5rem;"><table><thead>
+      <tr><th>日付</th><th>曜</th><th>19:00〜　出欠</th></tr>
+    </thead><tbody>`;
+    byMonth[mo].forEach(d => {
+      const v = att[d.key] || '';
+      const sun = d.dayOfWeek===0, sat = d.dayOfWeek===6;
+      html += `<tr>
+        <td style="font-weight:600;${sun?'color:var(--red-text);':''}">${d.label}</td>
+        <td style="${sun?'color:var(--red-text);':sat?'color:#0C447C;':''}">${d.dow}</td>
+        <td><div style="display:flex;gap:6px;">
+          <button class="att-btn" data-mid="${mid}" data-date="${d.key}" data-val="yes"   ${v==='yes'  ?'data-sel="yes"'  :''} onclick="setAtt(this)">○ 出席可能</button>
+          <button class="att-btn" data-mid="${mid}" data-date="${d.key}" data-val="no"    ${v==='no'   ?'data-sel="no"'   :''} onclick="setAtt(this)">× 出席不可能</button>
+          <button class="att-btn" data-mid="${mid}" data-date="${d.key}" data-val="maybe" ${v==='maybe'?'data-sel="maybe"':''} onclick="setAtt(this)">△ 要調整</button>
+        </div></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  });
+  el.innerHTML = html;
+  saveArea.style.display = 'block';
+  document.getElementById('status-msg').innerHTML = '';
+  const old = document.getElementById('confirm-card');
+  if (old) old.remove();
+}
+
+// ===== 出欠セット =====
+function setAtt(btn) {
+  const mid = btn.dataset.mid, dateKey = btn.dataset.date, val = btn.dataset.val;
+  if (!answers[mid]) answers[mid] = {};
+  const prev = answers[mid][dateKey] || '';
+  const next = prev === val ? '' : val;
+  answers[mid][dateKey] = next;
+  // ボタン即時更新
+  btn.closest('tr').querySelectorAll('.att-btn').forEach(b => {
+    if (b.dataset.val === next) b.setAttribute('data-sel', next);
+    else b.removeAttribute('data-sel');
+  });
+  // localStorageに保存
+  try { localStorage.setItem('rotary_answers_2026', JSON.stringify(answers)); } catch(e) {}
+  renderMembers();
+  syncMemberSel();
+}
+
+// ===== スプレッドシート保存（マトリクス形式） =====
+async function saveToSheet() {
+  const mid = document.getElementById('answer-member-sel').value;
+  if (!mid) return;
+  const member = MEMBERS.find(m=>m.id===mid);
+  const btn = document.getElementById('btn-save');
+  const statusEl = document.getElementById('status-msg');
+
+  if (!GAS_URL) {
+    alert('管理者設定欄にGoogle Apps ScriptのURLを入力してください。');
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.className = 'status-msg status-loading';
+  statusEl.innerHTML = '<i class="ti ti-loader"></i> Googleスプレッドシートに保存中...';
+
+  // マトリクス形式データ構築
+  const dateHeaders = DATES.map(d => `${d.label}(${d.dow})`);
+  const headers = ['委員会','役職','名前', ...dateHeaders];
+  const rows = MEMBERS.map(m => {
+    const att = answers[m.id] || {};
+    return [m.group, m.role, m.name, ...DATES.map(d => labelOf(att[d.key]||''))];
+  });
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ headers, rows, updatedAt: new Date().toLocaleString('ja-JP') })
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      statusEl.className = 'status-msg status-ok';
+      statusEl.innerHTML = '<i class="ti ti-check"></i> Googleスプレッドシートに保存しました（全員分のマトリクス形式）';
+      showConfirm(member, answers[member.id] || {});
+    } else {
+      throw new Error(data.message);
+    }
+  } catch(e) {
+    statusEl.className = 'status-msg status-err';
+    statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> 保存に失敗しました：${e.message}`;
+  }
+  btn.disabled = false;
+}
+
+// ===== 回答確認表示 =====
+function showConfirm(member, att) {
+  const old = document.getElementById('confirm-card');
+  if (old) old.remove();
+  const now = new Date().toLocaleDateString('ja-JP');
+  const rows = DATES.filter(d=>att[d.key]).map(d => {
+    const v = att[d.key];
+    const bg = v==='yes'?'var(--green-bg)':v==='no'?'var(--red-bg)':'var(--yellow-bg)';
+    const col = v==='yes'?'var(--green-text)':v==='no'?'var(--red-text)':'var(--yellow-text)';
+    return `<tr><td>${d.label}（${d.dow}）</td><td>
+      <span style="background:${bg};color:${col};padding:2px 9px;border-radius:4px;font-size:12px;font-weight:600;">${fullLabelOf(v)}</span>
+    </td></tr>`;
+  }).join('');
+  const div = document.createElement('div');
+  div.id = 'confirm-card';
+  div.innerHTML = `<div class="card" style="margin-top:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+      <div>
+        <p style="font-size:15px;font-weight:700;">${member.name} さんの回答確認</p>
+        <p style="font-size:12px;color:var(--text-secondary);">${member.group}　${member.role}　／　回答日：${now}</p>
+      </div>
+      <button class="btn-pdf" onclick="downloadPdf('${member.id}')">
+        <i class="ti ti-file-type-pdf"></i> PDFダウンロード
+      </button>
+    </div>
+    <div class="legend">
+      <span class="leg" style="background:var(--green-bg);color:var(--green-text);">○ 出席可能</span>
+      <span class="leg" style="background:var(--red-bg);color:var(--red-text);">× 出席不可能</span>
+      <span class="leg" style="background:var(--yellow-bg);color:var(--yellow-text);">△ 要調整</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table><thead><tr><th>日付</th><th>回答</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="2" style="color:var(--text-tertiary);">回答がありません</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+  document.getElementById('save-area').after(div);
+}
+
+// ===== PDFダウンロード =====
+function downloadPdf(mid) {
+  const member = MEMBERS.find(m=>m.id===mid);
+  const att = answers[mid] || {};
+  const now = new Date().toLocaleDateString('ja-JP');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  doc.setFontSize(13);
+  doc.text('出雲南ロータリークラブ 2026-2027年度', 14, 16);
+  doc.setFontSize(11);
+  doc.text('第1回委員会開催日程調整 - 回答確認書', 14, 23);
+  doc.setFontSize(9);
+  doc.text(`氏名：${member.name}　委員会：${member.group}　役職：${member.role}`, 14, 31);
+  doc.text(`開催時間：19:00〜　開催場所：未定　回答日：${now}`, 14, 37);
+  doc.line(14, 40, 196, 40);
+  const body = DATES.map(d => [d.label+'('+d.dow+')', fullLabelOf(att[d.key]||'')]);
+  doc.autoTable({
+    startY: 44,
+    head: [['日付','回答']],
+    body,
+    styles: { font:'helvetica', fontSize:9 },
+    headStyles: { fillColor:[28,74,14], textColor:255 },
+    alternateRowStyles: { fillColor:[245,250,240] },
+    columnStyles: { 0:{ cellWidth:40 }, 1:{ cellWidth:80 } },
+  });
+  doc.save(`出欠回答_${member.name}_${now.replace(/\//g,'')}.pdf`);
+}
+
+// ===== 集計 =====
+function renderSummary() {
+  const el = document.getElementById('summary-content');
+  const totalAnswered = MEMBERS.filter(m=>Object.values(answers[m.id]||{}).some(v=>v)).length;
+  const scored = DATES.map(d => {
+    let yes=0,no=0,maybe=0,none=0;
+    MEMBERS.forEach(m => {
+      const v = (answers[m.id]||{})[d.key]||'';
+      if(v==='yes')yes++; else if(v==='no')no++; else if(v==='maybe')maybe++; else none++;
+    });
+    return { ...d, yes, no, maybe, none };
+  }).sort((a,b) => b.yes-a.yes || a.no-b.no || a.none-b.none);
+  const maxYes = scored[0] ? scored[0].yes : 0;
+  const byMonth = {};
+  scored.forEach(d => { const mo=d.key.slice(0,7); if(!byMonth[mo])byMonth[mo]=[]; byMonth[mo].push(d); });
+
+  let html = `<div class="grid3">
+    <div class="metric"><div class="metric-label">メンバー数</div><div class="metric-val">${MEMBERS.length}</div></div>
+    <div class="metric"><div class="metric-label">回答済み</div><div class="metric-val" style="color:var(--green-text);">${totalAnswered}</div></div>
+    <div class="metric"><div class="metric-label">候補日数</div><div class="metric-val">${DATES.length}</div></div>
+  </div>
+  <div class="card" style="font-size:12px;color:var(--text-secondary);display:flex;gap:16px;flex-wrap:wrap;padding:.75rem 1.25rem;">
+    <span><i class="ti ti-clock"></i> 開催時間：19:00〜</span>
+    <span><i class="ti ti-map-pin"></i> 開催場所：未定</span>
+  </div>
+  <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">○出席可能が多い順に表示。緑の行が最多の日です。</p>`;
+
+  Object.keys(byMonth).sort().forEach(mo => {
+    const mNum = parseInt(mo.split('-')[1]);
+    html += `<p style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">${mNum}月</p>`;
+    html += `<div style="overflow-x:auto;margin-bottom:1.5rem;"><table><thead><tr>
+      <th>日付</th><th>曜</th>
+      <th style="color:var(--green-text);">○出席可能</th>
+      <th style="color:var(--yellow-text);">△要調整</th>
+      <th style="color:var(--red-text);">×出席不可</th>
+      <th style="color:var(--text-tertiary);">未回答</th>
+    </tr></thead><tbody>`;
+    byMonth[mo].forEach(d => {
+      const isTop = maxYes>0 && d.yes===maxYes;
+      const sun=d.dayOfWeek===0, sat=d.dayOfWeek===6;
+      html += `<tr style="${isTop?'background:var(--green-bg);':''}">
+        <td style="font-weight:${isTop?'700':'400'};${sun?'color:var(--red-text);':''}">${d.label}</td>
+        <td style="${sun?'color:var(--red-text);':sat?'color:#0C447C;':''}">${d.dow}</td>
+        <td style="color:var(--green-text);font-weight:700;">${d.yes}</td>
+        <td style="color:var(--yellow-text);">${d.maybe}</td>
+        <td style="color:var(--red-text);">${d.no}</td>
+        <td style="color:var(--text-tertiary);">${d.none}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ===== 管理者認証 =====
+const ADMIN_HASH = '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b'; // SHA-256 of "8282"
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function showAdminPanel() {
+  const pw = prompt('管理者パスワードを入力してください：');
+  if (!pw) return;
+  sha256(pw).then(hash => {
+    if (hash === ADMIN_HASH) {
+      document.getElementById('admin-banner').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+    } else {
+      alert('パスワードが違います。');
+    }
+  });
+}
+
+// ===== リセット機能 =====
+function resetMyAnswers() {
+  const mid = document.getElementById('answer-member-sel').value;
+  if (!mid) {
+    alert('出欠回答タブで名前を選んでからリセットしてください。');
+    return;
+  }
+  const member = MEMBERS.find(m => m.id === mid);
+  if (!confirm(`「${member.name}」さんの回答をリセットします。よろしいですか？`)) return;
+  answers[mid] = {};
+  try { localStorage.setItem('rotary_answers_2026', JSON.stringify(answers)); } catch(e) {}
+  renderAnswerDates();
+  renderMembers();
+  syncMemberSel();
+  alert('リセットしました。');
+}
+
+function resetAllAnswers() {
+  if (!confirm('⚠️ 全員分の回答をリセットします。\nこの操作は取り消せません。よろしいですか？')) return;
+  MEMBERS.forEach(m => { answers[m.id] = {}; });
+  try { localStorage.setItem('rotary_answers_2026', JSON.stringify(answers)); } catch(e) {}
+  const old = document.getElementById('confirm-card');
+  if (old) old.remove();
+  document.getElementById('answer-dates').innerHTML = '';
+  document.getElementById('save-area').style.display = 'none';
+  document.getElementById('status-msg').innerHTML = '';
+  syncMemberSel();
+  renderMembers();
+  alert('全員分の回答をリセットしました。');
+}
+
+// ===== 初期描画 =====
+renderMembers();
+syncMemberSel();
+</script>
+
+<!-- ===== 管理者ログイン（ページ最下部・目立たない） ===== -->
+<div style="text-align:center;padding:2rem 0 1rem;">
+  <button id="admin-banner" onclick="showAdminPanel()" style="background:none;border:none;font-size:11px;color:var(--text-tertiary);cursor:pointer;padding:4px 8px;opacity:0.5;">管理者</button>
+</div>
+<div id="admin-panel" style="display:none;background:#f3f0ff;border:1px solid #b0a0ee;border-radius:8px;padding:.75rem 1rem;margin:0 0 2rem;font-size:13px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span style="color:#3c3489;font-weight:600;">✓ 管理者モード</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-reset" onclick="resetMyAnswers()">選択中の回答をリセット</button>
+      <button class="btn-reset-danger" onclick="resetAllAnswers()">全員分をリセット</button>
+      <button class="btn-reset" onclick="lockAdmin()" style="border-color:#888;color:#666;">ログアウト</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
