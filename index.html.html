@@ -303,10 +303,10 @@ const GROUP_BADGE = {
 // ===== GAS URL（固定・非表示） =====
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzbrYNVmhZJJ092jeHwLg1GiY1497p90NrFXc5QKDSmYC3TM7HZ79DQwPiTVS0SJtW9gg/exec';
 
-// ===== 状態（localStorageから復元） =====
+// ===== 状態（localStorageから復元・テストデータはクリア） =====
 let answers = {};
 try {
-  const saved = localStorage.getItem('rotary_answers_2026');
+  const saved = localStorage.getItem('rotary_answers_2026v2');
   if (saved) answers = JSON.parse(saved);
 } catch(e) {}
 MEMBERS.forEach(m => { if (!answers[m.id]) answers[m.id] = {}; });
@@ -416,6 +416,7 @@ function renderAnswerDates() {
           <button class="att-btn" data-mid="${mid}" data-date="${d.key}" data-val="yes"   ${v==='yes'  ?'data-sel="yes"'  :''} onclick="setAtt(this)">○ 出席可能</button>
           <button class="att-btn" data-mid="${mid}" data-date="${d.key}" data-val="no"    ${v==='no'   ?'data-sel="no"'   :''} onclick="setAtt(this)">× 出席不可能</button>
           <button class="att-btn" data-mid="${mid}" data-date="${d.key}" data-val="maybe" ${v==='maybe'?'data-sel="maybe"':''} onclick="setAtt(this)">△ 要調整</button>
+          ${!v ? '<span class="unanswered-marker" style="font-size:11px;color:var(--red-text);margin-left:4px;">← 要回答</span>' : ''}
         </div></td>
       </tr>`;
     });
@@ -436,12 +437,16 @@ function setAtt(btn) {
   const next = prev === val ? '' : val;
   answers[mid][dateKey] = next;
   // ボタン即時更新
-  btn.closest('tr').querySelectorAll('.att-btn').forEach(b => {
+  const row = btn.closest('tr');
+  row.querySelectorAll('.att-btn').forEach(b => {
     if (b.dataset.val === next) b.setAttribute('data-sel', next);
     else b.removeAttribute('data-sel');
   });
+  // 未回答マーカー更新
+  const marker = row.querySelector('.unanswered-marker');
+  if (marker) marker.style.display = next ? 'none' : 'inline';
   // localStorageに保存
-  try { localStorage.setItem('rotary_answers_2026', JSON.stringify(answers)); } catch(e) {}
+  try { localStorage.setItem('rotary_answers_2026v2', JSON.stringify(answers)); } catch(e) {}
   renderMembers();
   syncMemberSel();
 }
@@ -453,6 +458,17 @@ async function saveToSheet() {
   const member = MEMBERS.find(m=>m.id===mid);
   const btn = document.getElementById('btn-save');
   const statusEl = document.getElementById('status-msg');
+
+  // ===== 未回答チェック =====
+  const att = answers[mid] || {};
+  const unanswered = DATES.filter(d => !att[d.key]);
+  if (unanswered.length > 0) {
+    const list = unanswered.map(d => `${d.label}（${d.dow}）`).join('、');
+    statusEl.className = 'status-msg status-err';
+    statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> <strong>未回答の日程があります。すべての日程にご回答ください。</strong><br><span style="font-size:12px;margin-top:4px;display:block;">未回答：${list}</span>`;
+    statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
 
   if (!GAS_URL) {
     alert('管理者設定欄にGoogle Apps ScriptのURLを入力してください。');
@@ -644,7 +660,7 @@ function resetMyAnswers() {
   const member = MEMBERS.find(m => m.id === mid);
   if (!confirm(`「${member.name}」さんの回答をリセットします。よろしいですか？`)) return;
   answers[mid] = {};
-  try { localStorage.setItem('rotary_answers_2026', JSON.stringify(answers)); } catch(e) {}
+  try { localStorage.setItem('rotary_answers_2026v2', JSON.stringify(answers)); } catch(e) {}
   renderAnswerDates();
   renderMembers();
   syncMemberSel();
@@ -654,7 +670,7 @@ function resetMyAnswers() {
 function resetAllAnswers() {
   if (!confirm('⚠️ 全員分の回答をリセットします。\nこの操作は取り消せません。よろしいですか？')) return;
   MEMBERS.forEach(m => { answers[m.id] = {}; });
-  try { localStorage.setItem('rotary_answers_2026', JSON.stringify(answers)); } catch(e) {}
+  try { localStorage.setItem('rotary_answers_2026v2', JSON.stringify(answers)); } catch(e) {}
   const old = document.getElementById('confirm-card');
   if (old) old.remove();
   document.getElementById('answer-dates').innerHTML = '';
