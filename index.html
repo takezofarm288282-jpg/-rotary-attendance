@@ -530,7 +530,7 @@ function showConfirm(member, att) {
         <p style="font-size:12px;color:var(--text-secondary);">${member.group}　${member.role}　／　回答日：${now}</p>
       </div>
       <button class="btn-pdf" onclick="downloadPdf('${member.id}')">
-        <i class="ti ti-file-type-pdf"></i> PDFダウンロード
+        <i class="ti ti-printer"></i> 印刷／PDF保存
       </button>
     </div>
     <div class="legend">
@@ -547,32 +547,56 @@ function showConfirm(member, att) {
   document.getElementById('save-area').after(div);
 }
 
-// ===== PDFダウンロード =====
+// ===== PDF（印刷ダイアログ） =====
 function downloadPdf(mid) {
   const member = MEMBERS.find(m=>m.id===mid);
   const att = answers[mid] || {};
   const now = new Date().toLocaleDateString('ja-JP');
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-  doc.setFontSize(13);
-  doc.text('出雲南ロータリークラブ 2026-2027年度', 14, 16);
-  doc.setFontSize(11);
-  doc.text('第1回委員会開催日程調整 - 回答確認書', 14, 23);
-  doc.setFontSize(9);
-  doc.text(`氏名：${member.name}　委員会：${member.group}　役職：${member.role}`, 14, 31);
-  doc.text(`開催時間：19:00〜　開催場所：未定　回答日：${now}`, 14, 37);
-  doc.line(14, 40, 196, 40);
-  const body = DATES.map(d => [d.label+'('+d.dow+')', fullLabelOf(att[d.key]||'')]);
-  doc.autoTable({
-    startY: 44,
-    head: [['日付','回答']],
-    body,
-    styles: { font:'helvetica', fontSize:9 },
-    headStyles: { fillColor:[28,74,14], textColor:255 },
-    alternateRowStyles: { fillColor:[245,250,240] },
-    columnStyles: { 0:{ cellWidth:40 }, 1:{ cellWidth:80 } },
-  });
-  doc.save(`出欠回答_${member.name}_${now.replace(/\//g,'')}.pdf`);
+
+  const rows = DATES.map(d => {
+    const v = att[d.key] || '';
+    const bg = v==='yes'?'#eaf3de':v==='no'?'#fcebeb':v==='maybe'?'#faeeda':'#ffffff';
+    const col = v==='yes'?'#27500a':v==='no'?'#791f1f':v==='maybe'?'#633806':'#aaaaaa';
+    const label = fullLabelOf(v);
+    return `<tr><td>${d.label}（${d.dow}）</td><td style="background:${bg};color:${col};font-weight:600;">${label}</td></tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>回答確認書_${member.name}</title>
+<style>
+  body { font-family: 'Hiragino Sans','Noto Sans JP',sans-serif; font-size: 12px; color: #1a1a18; margin: 20mm 15mm; }
+  h1 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 12px; font-weight: 400; color: #666; margin-bottom: 16px; }
+  .meta { font-size: 11px; color: #444; margin-bottom: 4px; }
+  hr { border: none; border-top: 1px solid #ccc; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { background: #1c4a0e; color: #fff; padding: 6px 10px; text-align: left; }
+  td { padding: 5px 10px; border-bottom: 0.5px solid #ddd; }
+  tr:nth-child(even) td { background: #f5faf0; }
+  .footer { margin-top: 20px; font-size: 10px; color: #aaa; text-align: right; }
+  @media print { body { margin: 10mm 12mm; } }
+</style>
+</head>
+<body>
+<h1>出雲南ロータリークラブ 2026-2027年度</h1>
+<h2>第1回委員会開催日程調整 - 回答確認書</h2>
+<div class="meta">氏名：<strong>${member.name}</strong>　委員会：${member.group}　役職：${member.role}</div>
+<div class="meta">開催時間：19:00〜　開催場所：未定　回答日：${now}</div>
+<hr>
+<table>
+  <thead><tr><th>日付</th><th>回答</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<div class="footer">出雲南ロータリークラブ 2026-2027年度　第1回委員会開催日程調整</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
 }
 
 // ===== 集計 =====
@@ -648,6 +672,11 @@ function showAdminPanel() {
       alert('パスワードが違います。');
     }
   });
+}
+
+function lockAdmin() {
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-banner').style.display = 'inline-block';
 }
 
 // ===== リセット機能 =====
