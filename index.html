@@ -654,7 +654,7 @@ function renderSummary() {
 }
 
 // ===== 管理者認証 =====
-const ADMIN_HASH = '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b'; // SHA-256 of "8282"
+const ADMIN_HASH = '614cb3fc60cb6dc183a042b4603f2a88d5c7fdf4ec626f13b8e5121af01f09ea'; // SHA-256 of "8282"
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
