@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -668,9 +669,89 @@ function showAdminPanel() {
     if (hash === ADMIN_HASH) {
       document.getElementById('admin-banner').style.display = 'none';
       document.getElementById('admin-panel').style.display = 'block';
+      // 管理者用メンバーセレクトを同期
+      const sel = document.getElementById('admin-member-sel');
+      sel.innerHTML = '<option value="">メンバーを選択</option>';
+      const groups = {};
+      MEMBERS.forEach(m => { if (!groups[m.group]) groups[m.group]=[]; groups[m.group].push(m); });
+      Object.keys(groups).forEach(g => {
+        const og = document.createElement('optgroup');
+        og.label = g;
+        groups[g].forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.id;
+          const has = Object.values(answers[m.id]||{}).some(v=>v);
+          opt.textContent = m.name + '（' + m.role + '）' + (has ? ' ✓回答済' : '');
+          og.appendChild(opt);
+        });
+        sel.appendChild(og);
+      });
     } else {
       alert('パスワードが違います。');
     }
+  });
+}
+
+// 特定メンバーの回答をリセット
+async function resetOneMember() {
+  const mid = document.getElementById('admin-member-sel').value;
+  if (!mid) { alert('メンバーを選択してください。'); return; }
+  const member = MEMBERS.find(m => m.id === mid);
+  if (!confirm(`「${member.name}」さんの回答をリセットします。\nブラウザとスプレッドシートの両方から消去されます。よろしいですか？`)) return;
+
+  // ブラウザデータをリセット
+  answers[mid] = {};
+  try { localStorage.setItem('rotary_answers_2026v2', JSON.stringify(answers)); } catch(e) {}
+
+  // 出欠回答タブの表示を更新
+  const currentMid = document.getElementById('answer-member-sel').value;
+  if (currentMid === mid) {
+    document.getElementById('answer-dates').innerHTML = '';
+    document.getElementById('save-area').style.display = 'none';
+    document.getElementById('status-msg').innerHTML = '';
+    const old = document.getElementById('confirm-card');
+    if (old) old.remove();
+  }
+  renderMembers();
+  syncMemberSel();
+
+  // スプレッドシートの該当行を空白で上書き
+  const dateHeaders = DATES.map(d => `${d.label}(${d.dow})`);
+  const headers = ['委員会','役職','名前', ...dateHeaders];
+  const rows = [[ member.group, member.role, member.name, ...DATES.map(() => '') ]];
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ headers, rows, memberName: member.name, updatedAt: new Date().toLocaleString('ja-JP') })
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      alert(`「${member.name}」さんの回答をリセットしました。`);
+    } else {
+      alert(`ブラウザのリセットは完了しました。\nスプレッドシートの消去に失敗しました：${data.message}`);
+    }
+  } catch(e) {
+    alert(`ブラウザのリセットは完了しました。\nスプレッドシートの消去に失敗しました：${e.message}`);
+  }
+
+  // 管理者セレクトを再同期
+  const sel = document.getElementById('admin-member-sel');
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">メンバーを選択</option>';
+  const groups = {};
+  MEMBERS.forEach(m => { if (!groups[m.group]) groups[m.group]=[]; groups[m.group].push(m); });
+  Object.keys(groups).forEach(g => {
+    const og = document.createElement('optgroup');
+    og.label = g;
+    groups[g].forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      const has = Object.values(answers[m.id]||{}).some(v=>v);
+      opt.textContent = m.name + '（' + m.role + '）' + (has ? ' ✓回答済' : '');
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
   });
 }
 
@@ -738,12 +819,27 @@ syncMemberSel();
   <button id="admin-banner" onclick="showAdminPanel()" style="background:none;border:none;font-size:11px;color:var(--text-tertiary);cursor:pointer;padding:4px 8px;opacity:0.5;">管理者</button>
 </div>
 <div id="admin-panel" style="display:none;background:#f3f0ff;border:1px solid #b0a0ee;border-radius:8px;padding:.75rem 1rem;margin:0 0 2rem;font-size:13px;">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <span style="color:#3c3489;font-weight:600;">✓ 管理者モード</span>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn-reset" onclick="resetMyAnswers()">選択中の回答をリセット</button>
-      <button class="btn-reset-danger" onclick="resetAllAnswers()">全員分をリセット</button>
-      <button class="btn-reset" onclick="lockAdmin()" style="border-color:#888;color:#666;">ログアウト</button>
+    <div style="display:flex;flex-direction:column;gap:10px;flex:1;max-width:600px;">
+
+      <!-- 特定メンバーのリセット -->
+      <div style="background:#fff;border:0.5px solid #b0a0ee;border-radius:6px;padding:10px 12px;">
+        <p style="font-size:12px;color:#3c3489;font-weight:600;margin-bottom:6px;">特定メンバーの回答をリセット</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="admin-member-sel" style="font-size:13px;padding:5px 8px;border:0.5px solid #b0a0ee;border-radius:4px;background:#fff;flex:1;min-width:160px;">
+            <option value="">メンバーを選択</option>
+          </select>
+          <button class="btn-reset" onclick="resetOneMember()" style="white-space:nowrap;">この人の回答をリセット</button>
+        </div>
+      </div>
+
+      <!-- 全員リセット・ログアウト -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-reset-danger" onclick="resetAllAnswers()">全員分をリセット</button>
+        <button class="btn-reset" onclick="lockAdmin()" style="border-color:#888;color:#666;">ログアウト</button>
+      </div>
+
     </div>
   </div>
 </div>
