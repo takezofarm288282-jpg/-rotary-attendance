@@ -482,7 +482,6 @@ async function saveToSheet() {
   // 回答者1人分のデータのみ送信（他のメンバーのデータには触れない）
   const dateHeaders = DATES.map(d => `${d.label}(${d.dow})`);
   const headers = ['委員会','役職','名前', ...dateHeaders];
-  const att = answers[mid] || {};
   const rows = [[member.group, member.role, member.name, ...DATES.map(d => labelOf(att[d.key]||''))]];
 
   try {
