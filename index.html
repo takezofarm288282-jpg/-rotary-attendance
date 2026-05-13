@@ -301,7 +301,7 @@ const GROUP_BADGE = {
 };
 
 // ===== GAS URL（固定・非表示） =====
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzbrYNVmhZJJ092jeHwLg1GiY1497p90NrFXc5QKDSmYC3TM7HZ79DQwPiTVS0SJtW9gg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby3Cee3n9kC5oENEZaNH4TRdF4JmPGAgiM2P1xI1Ss2CpzjbRYhsiLsve2iuPFWX1AluQ/exec';
 
 // ===== 状態（localStorageから復元・テストデータはクリア） =====
 let answers = {};
@@ -491,7 +491,7 @@ async function saveToSheet() {
     const res = await fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ headers, rows, updatedAt: new Date().toLocaleString('ja-JP') })
+      body: JSON.stringify({ headers, rows, memberName: member.name, updatedAt: new Date().toLocaleString('ja-JP') })
     });
     const data = await res.json();
     if (data.status === 'ok') {
