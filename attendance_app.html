@@ -479,13 +479,11 @@ async function saveToSheet() {
   statusEl.className = 'status-msg status-loading';
   statusEl.innerHTML = '<i class="ti ti-loader"></i> Googleスプレッドシートに保存中...';
 
-  // マトリクス形式データ構築
+  // 回答者1人分のデータのみ送信（他のメンバーのデータには触れない）
   const dateHeaders = DATES.map(d => `${d.label}(${d.dow})`);
   const headers = ['委員会','役職','名前', ...dateHeaders];
-  const rows = MEMBERS.map(m => {
-    const att = answers[m.id] || {};
-    return [m.group, m.role, m.name, ...DATES.map(d => labelOf(att[d.key]||''))];
-  });
+  const att = answers[mid] || {};
+  const rows = [[member.group, member.role, member.name, ...DATES.map(d => labelOf(att[d.key]||''))]];
 
   try {
     const res = await fetch(GAS_URL, {
@@ -789,14 +787,14 @@ function resetAllAnswers() {
   syncMemberSel();
   renderMembers();
 
-  // スプレッドシートもリセット
-  const dateHeaders = DATES.map(d => `${d.label}(${d.dow})`);
-  const headers = ['委員会','役職','名前', ...dateHeaders];
-  const rows = MEMBERS.map(m => [m.group, m.role, m.name, ...DATES.map(() => '')]);
+  // スプレッドシートも全員分空白でリセット
+  const dateHeaders2 = DATES.map(d => `${d.label}(${d.dow})`);
+  const headers2 = ['委員会','役職','名前', ...dateHeaders2];
+  const rows2 = MEMBERS.map(m => [m.group, m.role, m.name, ...DATES.map(() => '')]);
   fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ headers, rows, updatedAt: new Date().toLocaleString('ja-JP') })
+    body: JSON.stringify({ headers: headers2, rows: rows2, resetAll: true, updatedAt: new Date().toLocaleString('ja-JP') })
   }).then(res => res.json()).then(data => {
     if (data.status === 'ok') {
       alert('全員分の回答をリセットしました。\nスプレッドシートも消去されました。');
