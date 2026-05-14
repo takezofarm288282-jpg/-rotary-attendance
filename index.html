@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -290,7 +289,7 @@ const MEMBERS = [
   {id:'m9', name:'吾郷紘一',  role:'委員',     group:'米山記念奨学会'},
   {id:'m10',name:'錦織正二',  role:'委員',     group:'米山記念奨学会'},
   {id:'m11',name:'福代新治',  role:'委員長',   group:'ロータリー財団'},
-  {id:'m12',name:'土伊豆勝磨',role:'副委員長', group:'ロータリー財団'},
+  {id:'m12',name:'土井豆勝磨',role:'副委員長', group:'ロータリー財団'},
   {id:'m13',name:'原田明成',  role:'委員',     group:'ロータリー財団'},
   {id:'m14',name:'松村英俊',  role:'副委員長', group:'インターアクト'},
   {id:'m15',name:'樋野圭衣子',role:'委員',     group:'インターアクト'},
@@ -304,13 +303,11 @@ const GROUP_BADGE = {
 // ===== GAS URL（固定・非表示） =====
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby3Cee3n9kC5oENEZaNH4TRdF4JmPGAgiM2P1xI1Ss2CpzjbRYhsiLsve2iuPFWX1AluQ/exec';
 
-// ===== 状態（localStorageから復元・テストデータはクリア） =====
+// ===== 状態（常にゼロからスタート） =====
 let answers = {};
-try {
-  const saved = localStorage.getItem('rotary_answers_2026v2');
-  if (saved) answers = JSON.parse(saved);
-} catch(e) {}
-MEMBERS.forEach(m => { if (!answers[m.id]) answers[m.id] = {}; });
+MEMBERS.forEach(m => { answers[m.id] = {}; });
+// 古いlocalStorageデータを完全削除
+try { localStorage.removeItem('rotary_answers_2026v2'); } catch(e) {}
 
 function generateDates() {
   const dates = [];
@@ -447,7 +444,7 @@ function setAtt(btn) {
   const marker = row.querySelector('.unanswered-marker');
   if (marker) marker.style.display = next ? 'none' : 'inline';
   // localStorageに保存
-  try { localStorage.setItem('rotary_answers_2026v2', JSON.stringify(answers)); } catch(e) {}
+  
   renderMembers();
   syncMemberSel();
 }
@@ -480,13 +477,10 @@ async function saveToSheet() {
   statusEl.className = 'status-msg status-loading';
   statusEl.innerHTML = '<i class="ti ti-loader"></i> Googleスプレッドシートに保存中...';
 
-  // マトリクス形式データ構築
+  // 回答者1人分のデータのみ送信（他のメンバーのデータには触れない）
   const dateHeaders = DATES.map(d => `${d.label}(${d.dow})`);
   const headers = ['委員会','役職','名前', ...dateHeaders];
-  const rows = MEMBERS.map(m => {
-    const att = answers[m.id] || {};
-    return [m.group, m.role, m.name, ...DATES.map(d => labelOf(att[d.key]||''))];
-  });
+  const rows = [[member.group, member.role, member.name, ...DATES.map(d => labelOf(att[d.key]||''))]];
 
   try {
     const res = await fetch(GAS_URL, {
@@ -701,7 +695,7 @@ async function resetOneMember() {
 
   // ブラウザデータをリセット
   answers[mid] = {};
-  try { localStorage.setItem('rotary_answers_2026v2', JSON.stringify(answers)); } catch(e) {}
+  
 
   // 出欠回答タブの表示を更新
   const currentMid = document.getElementById('answer-member-sel').value;
@@ -770,7 +764,7 @@ function resetMyAnswers() {
   const member = MEMBERS.find(m => m.id === mid);
   if (!confirm(`「${member.name}」さんの回答をリセットします。よろしいですか？`)) return;
   answers[mid] = {};
-  try { localStorage.setItem('rotary_answers_2026v2', JSON.stringify(answers)); } catch(e) {}
+  
   renderAnswerDates();
   renderMembers();
   syncMemberSel();
@@ -781,7 +775,7 @@ function resetAllAnswers() {
   if (!confirm('⚠️ 全員分の回答をリセットします。\nブラウザのデータとGoogleスプレッドシートの両方が消去されます。\nこの操作は取り消せません。よろしいですか？')) return;
 
   MEMBERS.forEach(m => { answers[m.id] = {}; });
-  try { localStorage.setItem('rotary_answers_2026v2', JSON.stringify(answers)); } catch(e) {}
+  
   const old = document.getElementById('confirm-card');
   if (old) old.remove();
   document.getElementById('answer-dates').innerHTML = '';
@@ -790,14 +784,14 @@ function resetAllAnswers() {
   syncMemberSel();
   renderMembers();
 
-  // スプレッドシートもリセット
-  const dateHeaders = DATES.map(d => `${d.label}(${d.dow})`);
-  const headers = ['委員会','役職','名前', ...dateHeaders];
-  const rows = MEMBERS.map(m => [m.group, m.role, m.name, ...DATES.map(() => '')]);
+  // スプレッドシートも全員分空白でリセット
+  const dateHeaders2 = DATES.map(d => `${d.label}(${d.dow})`);
+  const headers2 = ['委員会','役職','名前', ...dateHeaders2];
+  const rows2 = MEMBERS.map(m => [m.group, m.role, m.name, ...DATES.map(() => '')]);
   fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ headers, rows, updatedAt: new Date().toLocaleString('ja-JP') })
+    body: JSON.stringify({ headers: headers2, rows: rows2, resetAll: true, updatedAt: new Date().toLocaleString('ja-JP') })
   }).then(res => res.json()).then(data => {
     if (data.status === 'ok') {
       alert('全員分の回答をリセットしました。\nスプレッドシートも消去されました。');
